@@ -1,0 +1,65 @@
+
+// value ::= value:a PLUS value:b {:
+//     if (a instanceof String || b instanceof String) RESULT = toStr(a) + toStr(b);
+//     else RESULT = toNumber(a) + toNumber(b);
+// :};
+
+// value ::= value:a MINUS value:b {:
+//     if (a instanceof String || b instanceof String) typeError("Cannot subtract strings", a);
+//     RESULT = toNumber(a) - toNumber(b);
+// :};
+
+// value ::= value:a MUL value:b {:
+//     if (a instanceof String || b instanceof String) typeError("Cannot multiply strings", a);
+//     RESULT = toNumber(a) * toNumber(b);
+// :};
+
+// value ::= value:a DIV value:b {:
+//     if (a instanceof String || b instanceof String) typeError("Cannot divide strings", a);
+//     if (toNumber(b) == 0.0f) typeError("Division by zero", b);
+//     RESULT = toNumber(a) / toNumber(b);
+// :};
+
+// value ::= NOT value:a {:
+//     if (!(a instanceof Boolean)) typeError("Cannot apply 'not' to a non-boolean value", a);
+//     RESULT = !((Boolean) a);
+// :};
+
+// value ::= OPEN_PARENTHESIS value CLOSE_PARENTHESIS;
+
+// value ::= value:a EQUALITY value:b {:
+//     RESULT = (a != null && a.equals(b));
+// :};
+// value ::= value:a INEQUALITY value:b {:
+//     RESULT = (a == null ? b != null : !a.equals(b));
+// :};
+
+// value ::= value:a LESS value:b {:
+//     if (a instanceof String || b instanceof String) typeError("Cannot compare strings with <", a);
+//     RESULT = toNumber(a) < toNumber(b);
+// :};
+
+// value ::= value:a LESS_EQUAL value:b {:
+//     if (a instanceof String || b instanceof String) typeError("Cannot compare strings with <=", a);
+//     RESULT = toNumber(a) <= toNumber(b);
+// :};
+
+// value ::= value:a GREATER value:b {:
+//     if (a instanceof String || b instanceof String) typeError("Cannot compare strings with >", a);
+//     RESULT = toNumber(a) > toNumber(b);
+// :};
+
+// value ::= value:a GREATER_EQUAL value:b {:
+//     if (a instanceof String || b instanceof String) typeError("Cannot compare strings with >=", a);
+//     RESULT = toNumber(a) >= toNumber(b);
+// :};
+
+// value ::= value:a AND value:b {:
+//     if (!(a instanceof Boolean) || !(b instanceof Boolean)) typeError("Cannot apply 'and' to non-boolean values", a);
+//     RESULT = (Boolean) a && (Boolean) b;
+// :};
+
+// value ::= value:a OR value:b {:
+//     if (!(a instanceof Boolean) || !(b instanceof Boolean)) typeError("Cannot apply 'or' to non-boolean values", a);
+//     RESULT = (Boolean) a || (Boolean) b;
+// :};

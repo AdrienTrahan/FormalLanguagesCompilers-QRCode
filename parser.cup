@@ -1,0 +1,605 @@
+import java_cup.runtime.*;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+init with {:
+    variableNameMap = new HashMap<String, String>();
+    functionNameMap = new HashMap<String, String>();
+    blocksTable = new HashMap<String, Statements>();
+:};
+
+parser code {:
+    public HashMap <String, Statements> blocksTable;
+    public HashMap <String, String> functionNameMap;
+    public HashMap <String, String> variableNameMap;
+    private int tempVarCounter = 0;
+    private int tempBlockCounter = 0;
+
+    private String generateTempVariableName() {
+        return String.valueOf(tempVarCounter++);
+    }
+    private String generateTempBlockName() {
+        return String.valueOf(tempBlockCounter++);
+    }
+    public ArrayList<Object[]> getGeneratedByteCode(){
+        ArrayList<Object[]> allStatements = new ArrayList<>();
+        for (Map.Entry<String, Statements> entry : blocksTable.entrySet()) {
+            System.out.println("ici");
+            BlockDeclarationStatement blockDeclarationStatement = new BlockDeclarationStatement(entry.getKey());
+            allStatements.add(blockDeclarationStatement.toList());
+            for (Statement statement : entry.getValue().statements){
+                allStatements.add(statement.toList());
+            }
+        }
+        return allStatements;
+    }
+
+    public Integer getOptimizedHandle(String handle) {
+        if (variableNameMap.get(handle) != null) return Integer.parseInt(variableNameMap.get(handle));
+        return Integer.parseInt(handle);
+    }
+
+    public Integer getOptimizedFunctionName(String functionName) {
+        if (functionNameMap.get(functionName) != null) return Integer.parseInt(functionNameMap.get(functionName));
+        return Integer.parseInt(functionName);
+    }
+
+    public class Statements {
+        List<Statement> statements = new ArrayList<>();
+        public Statements() {
+        }
+        public void appendStatements(Statements b){
+            this.statements.addAll(b.statements);
+        }
+        public String getHandle(){
+            if (statements.isEmpty()) return null;
+            Statement lastStatement = statements.get(statements.size() - 1);
+            if (lastStatement instanceof ValueStatement) return ((ValueStatement) lastStatement).handle;
+            return null;
+        }
+    }
+
+    public class BlockDeclarationStatement extends Statement{
+        String blockName;
+        public BlockDeclarationStatement(String blockName){
+            this.blockName = blockName;
+        }
+        public Object[] toList() {
+            return new Object[]{ Statement.StatementType.BlockStart.getCode(), getOptimizedFunctionName(this.blockName) };
+        }
+    }
+    public class GotoStatement extends Statement{
+        String blockName;
+        public GotoStatement(String blockName){
+            this.blockName = blockName;
+        }
+        public Object[] toList() {
+            return new Object[]{ Statement.StatementType.GotoStatement.getCode(), getOptimizedFunctionName(this.blockName) };
+        }
+    }
+    public class ConditionalGotoStatement extends Statement {
+        String handle;
+        String blockNameA;
+        String blockNameB;
+
+        public ConditionalGotoStatement(String handle, String blockNameA) {
+            this(handle, blockNameA, null);
+        }
+
+        public ConditionalGotoStatement(String handle, String blockNameA, String blockNameB) {
+            this.handle = handle;
+            this.blockNameA = blockNameA;
+            this.blockNameB = blockNameB;
+        }
+        public Object[] toList() {
+            if (this.blockNameB == null) return new Object[]{ Statement.StatementType.ConditionalGotoStatement.getCode(), getOptimizedHandle(this.handle), getOptimizedFunctionName(this.blockNameA) };
+            return new Object[]{ Statement.StatementType.ConditionalGotoStatement.getCode(), getOptimizedHandle(this.handle), getOptimizedFunctionName(this.blockNameA), getOptimizedFunctionName(this.blockNameB) };
+        }
+    }
+    public abstract class ValueStatement extends Statement{
+        String handle;
+        public ValueStatement(){
+            this.handle = generateTempVariableName();
+        }
+    }
+    public class ConstantValueStatement extends ValueStatement{
+        Object value;
+
+        public enum ValueType {
+            Scalar(0),
+            Bool(1),
+            String(2);
+            private final int code;
+            ValueType(int code) {
+                this.code = code;
+            }
+            public int getCode() {
+                return code;
+            }
+        }
+
+        public ConstantValueStatement(Object value){
+            this.value = value;
+        }
+        public ValueType getValueType(){
+            if (this.value instanceof Float) return ValueType.Scalar;
+            if (this.value instanceof Boolean) return ValueType.Bool;
+            if (this.value instanceof String) return ValueType.String;
+            typeError("Value has no standard type", (Symbol) value);
+            return ValueType.String;
+        }
+        public Object[] toList() {
+            return new Object[]{ Statement.StatementType.ConstantValueStatement.getCode(), getOptimizedHandle(this.handle), this.getValueType().getCode(), this.value.toString()};
+        }
+    }
+    public class VariableValueStatement extends ValueStatement{
+        String name;
+        public VariableValueStatement(String name){
+            this.name = name;
+        }
+        public Object[] toList() {
+            return new Object[]{ Statement.StatementType.VariableValueStatement.getCode(), getOptimizedHandle(this.handle), getOptimizedHandle(this.name) };
+        }
+    }
+    
+    public class DualOperationValueStatement extends ValueStatement{
+        String a;
+        String b;
+        Operation op;
+        public enum Operation {
+            PLUS(0),
+            MINUS(1),
+            MUL(2),
+            DIV(3),
+            EQUALITY(4),
+            INEQUALITY(5),
+            LESS(6),
+            LESS_EQUAL(7),
+            GREATER(8),
+            GREATER_EQUAL(9),
+            AND(10),
+            OR(11);
+            private final int code;
+            Operation(int code) {
+                this.code = code;
+            }
+            public int getCode() {
+                return code;
+            }
+            @Override
+            public String toString() {
+                return String.valueOf(code);
+            }
+        }
+        public DualOperationValueStatement(String a, String b, Operation op){
+            this.a = a;
+            this.b = b;
+            this.op = op;
+        }
+        public Object[] toList() {
+            return new Object[]{ Statement.StatementType.DualOperationValueStatement.getCode(), getOptimizedHandle(this.handle), getOptimizedHandle(this.a), this.op.getCode(), getOptimizedHandle(this.b) };
+        }
+    }
+    public class NotOperationValueStatement extends ValueStatement{
+        String a;
+        public NotOperationValueStatement(String a){
+            this.a = a;
+        }
+        public Object[] toList() {
+            return new Object[]{ Statement.StatementType.NotOperationValueStatement.getCode(), getOptimizedHandle(this.handle), getOptimizedHandle(this.a) };
+        }
+    }
+
+    public class AssignmentStatement extends Statement{
+        String a;
+        String b;
+        public AssignmentStatement(String a, String b){
+            this.a = a;
+            this.b = b;
+        }
+        public Object[] toList() {
+            return new Object[]{ Statement.StatementType.AssignmentStatement.getCode(), getOptimizedHandle(this.a), getOptimizedHandle(this.b) };
+        }
+    }
+
+    public abstract class Statement {
+        public enum StatementType {
+            BlockStart(0),
+            GotoStatement(1),
+            ConditionalGotoStatement(2),
+            ConstantValueStatement(3),
+            VariableValueStatement(4),
+            DualOperationValueStatement(5),
+            NotOperationValueStatement(6),
+            AssignmentStatement(7);
+
+            private final int code;
+            StatementType(int code) {
+                this.code = code;
+            }
+            public int getCode() {
+                return code;
+            }
+            @Override
+            public String toString() {
+                return String.valueOf(code);
+            }
+        }
+        abstract Object[] toList();
+    }
+
+
+    public void report_error(String message, Object info) {
+        System.err.print("ERROR: Syntax error");
+        if (info instanceof Symbol)
+            if (((Symbol)info).left != -1){
+                int line = (((Symbol)info).left)+1;
+                int column = (((Symbol)info).right)+1;
+                System.err.print(" (line "+line+", column "+column+"): ");
+            } else System.err.print(": ");
+        else System.err.print(": ");
+    }
+
+    private float toNumber(Object o) {
+        if (o instanceof Float f) return f;
+        if (o instanceof Boolean b) return Boolean.TRUE.equals(b) ? 1.0f : 0.0f;
+        throw new RuntimeException("Type error: not a number");
+    }
+
+    private String toStr(Object o) {
+        if (o instanceof String s) return s;
+        if (o instanceof Boolean b) return Boolean.TRUE.equals(b) ? "true" : "false";
+        return String.valueOf(o);
+    }
+
+    private void typeError(String msg, Object info) {
+        report_error(msg, info);
+        throw new RuntimeException(msg);
+    }
+
+:};
+
+
+terminal String STRING_VALUE, NAME;
+terminal Float SCALAR_VALUE;
+terminal Boolean BOOL_VALUE;
+terminal IF, THEN, ELSE, WHILE, FUNCTION, OPEN_PARENTHESIS, CLOSE_PARENTHESIS, OPEN_CURLY_BRACKET, CLOSE_CURLY_BRACKET, SEMICOLON, DOT, EQUALITY, INEQUALITY, GREATER, LESS, GREATER_EQUAL, LESS_EQUAL, ASSIGNMENT, PLUS_ASSIGNMENT, MINUS_ASSIGNMENT, MUL_ASSIGNMENT, DIV_ASSIGNMENT, PLUS, MINUS, MUL, DIV, NOT, AND, OR;
+
+non terminal file, prog, function_declaration;
+non terminal Statements statements, line, value;
+non terminal String block;
+
+precedence right NOT;
+precedence left OR;
+precedence left AND;
+precedence left EQUALITY, INEQUALITY;
+precedence left LESS, LESS_EQUAL, GREATER, GREATER_EQUAL;
+precedence left PLUS, MINUS;
+precedence left MUL, DIV;
+
+start with file;
+
+file ::= prog;
+
+prog ::= function_declaration prog | ;
+
+function_declaration ::= FUNCTION NAME:name OPEN_PARENTHESIS block:block_name CLOSE_PARENTHESIS SEMICOLON {:
+    parser.functionNameMap.put(name, block_name);
+:};
+
+block ::= OPEN_CURLY_BRACKET statements:x CLOSE_CURLY_BRACKET {:
+    String blockName = generateTempBlockName();
+    blocksTable.put(blockName, x);
+    RESULT = blockName;
+:};
+
+statements ::= line:a statements:b {:
+    Statements s = new Statements();
+    s.appendStatements((Statements) a);
+    s.appendStatements((Statements) b);
+    RESULT = s;
+:} | {:
+    RESULT = new Statements();
+:};
+
+value ::= STRING_VALUE:x {:
+    Statements s = new Statements();
+    s.statements.add(new ConstantValueStatement(x));
+    RESULT = s;
+:} | SCALAR_VALUE:x {:
+    Statements s = new Statements();
+    s.statements.add(new ConstantValueStatement(x));
+    RESULT = s;
+:} | BOOL_VALUE:x {: 
+    Statements s = new Statements();
+    s.statements.add(new ConstantValueStatement(x));
+    RESULT = s;
+:};
+
+value ::= value:a PLUS value:b {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    String handleB = b.getHandle();
+    if (handleB == null) typeError("Expression does not produce a value", b);
+    s.appendStatements(a);
+    s.appendStatements(b);
+    s.statements.add(new DualOperationValueStatement(handleA, handleB, DualOperationValueStatement.Operation.PLUS));
+    RESULT = s;
+:};
+
+value ::= value:a MINUS value:b {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    String handleB = b.getHandle();
+    if (handleB == null) typeError("Expression does not produce a value", b);
+    s.appendStatements(a);
+    s.appendStatements(b);
+    s.statements.add(new DualOperationValueStatement(handleA, handleB, DualOperationValueStatement.Operation.MINUS));
+    RESULT = s;
+:};
+
+value ::= value:a MUL value:b {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    String handleB = b.getHandle();
+    if (handleB == null) typeError("Expression does not produce a value", b);
+    s.appendStatements(a);
+    s.appendStatements(b);
+    s.statements.add(new DualOperationValueStatement(handleA, handleB, DualOperationValueStatement.Operation.MUL));
+    RESULT = s;
+:};
+
+value ::= value:a DIV value:b {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    String handleB = b.getHandle();
+    if (handleB == null) typeError("Expression does not produce a value", b);
+    s.appendStatements(a);
+    s.appendStatements(b);
+    s.statements.add(new DualOperationValueStatement(handleA, handleB, DualOperationValueStatement.Operation.DIV));
+    RESULT = s;
+:};
+
+value ::= NOT value:a {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    s.appendStatements(a);
+    s.statements.add(new NotOperationValueStatement(handleA));
+    RESULT = s;
+:};
+
+value ::= OPEN_PARENTHESIS value:x CLOSE_PARENTHESIS {:
+    RESULT = x;
+:};
+
+value ::= value:a EQUALITY value:b {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    String handleB = b.getHandle();
+    if (handleB == null) typeError("Expression does not produce a value", b);
+    s.appendStatements(a);
+    s.appendStatements(b);
+    s.statements.add(new DualOperationValueStatement(handleA, handleB, DualOperationValueStatement.Operation.EQUALITY));
+    RESULT = s;
+:};
+value ::= value:a INEQUALITY value:b {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    String handleB = b.getHandle();
+    if (handleB == null) typeError("Expression does not produce a value", b);
+    s.appendStatements(a);
+    s.appendStatements(b);
+    s.statements.add(new DualOperationValueStatement(handleA, handleB, DualOperationValueStatement.Operation.INEQUALITY));
+    RESULT = s;
+:};
+
+value ::= value:a LESS value:b {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    String handleB = b.getHandle();
+    if (handleB == null) typeError("Expression does not produce a value", b);
+    s.appendStatements(a);
+    s.appendStatements(b);
+    s.statements.add(new DualOperationValueStatement(handleA, handleB, DualOperationValueStatement.Operation.LESS));
+    RESULT = s;
+:};
+
+value ::= value:a LESS_EQUAL value:b {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    String handleB = b.getHandle();
+    if (handleB == null) typeError("Expression does not produce a value", b);
+    s.appendStatements(a);
+    s.appendStatements(b);
+    s.statements.add(new DualOperationValueStatement(handleA, handleB, DualOperationValueStatement.Operation.LESS_EQUAL));
+    RESULT = s;
+:};
+
+value ::= value:a GREATER value:b {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    String handleB = b.getHandle();
+    if (handleB == null) typeError("Expression does not produce a value", b);
+    s.appendStatements(a);
+    s.appendStatements(b);
+    s.statements.add(new DualOperationValueStatement(handleA, handleB, DualOperationValueStatement.Operation.GREATER));
+    RESULT = s;
+:};
+
+value ::= value:a GREATER_EQUAL value:b {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    String handleB = b.getHandle();
+    if (handleB == null) typeError("Expression does not produce a value", b);
+    s.appendStatements(a);
+    s.appendStatements(b);
+    s.statements.add(new DualOperationValueStatement(handleA, handleB, DualOperationValueStatement.Operation.GREATER_EQUAL));
+    RESULT = s;
+:};
+
+value ::= value:a AND value:b {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    String handleB = b.getHandle();
+    if (handleB == null) typeError("Expression does not produce a value", b);
+    s.appendStatements(a);
+    s.appendStatements(b);
+    s.statements.add(new DualOperationValueStatement(handleA, handleB, DualOperationValueStatement.Operation.AND));
+    RESULT = s;
+:};
+
+value ::= value:a OR value:b {:
+    Statements s = new Statements();
+    String handleA = a.getHandle();
+    if (handleA == null) typeError("Expression does not produce a value", a);
+    String handleB = b.getHandle();
+    if (handleB == null) typeError("Expression does not produce a value", b);
+    s.appendStatements(a);
+    s.appendStatements(b);
+    s.statements.add(new DualOperationValueStatement(handleA, handleB, DualOperationValueStatement.Operation.OR));
+    RESULT = s;
+:};
+
+value ::= NAME:name {:
+    Statements s = new Statements();
+    Statement newStatement = new VariableValueStatement(name);
+    s.statements.add(newStatement);
+    RESULT = s;
+:};
+
+line ::= NAME:name ASSIGNMENT value:val SEMICOLON {:
+
+    Statements s = new Statements();
+    String handle = val.getHandle();
+    if (handle == null) typeError("Expression does not produce a value", val);
+    
+    parser.variableNameMap.put(name, generateTempVariableName());
+    Statement newStatement = new AssignmentStatement(name, handle);
+    s.appendStatements(val);
+    s.statements.add(newStatement);
+    RESULT = s;
+:};
+
+line ::= NAME:name OPEN_PARENTHESIS CLOSE_PARENTHESIS SEMICOLON {:
+    Statements s = new Statements();
+    s.statements.add(new GotoStatement(name));
+    RESULT = s;
+:};
+
+line ::= IF OPEN_PARENTHESIS value:val CLOSE_PARENTHESIS DOT THEN OPEN_PARENTHESIS block:block_name CLOSE_PARENTHESIS SEMICOLON{:
+    Statements s = new Statements();
+    String handle = val.getHandle();
+    if (handle == null) typeError("Expression does not produce a value", val);
+    
+    Statement newStatement = new ConditionalGotoStatement(handle, block_name);
+    s.appendStatements(val);
+    s.statements.add(newStatement);
+    RESULT = s;
+:};
+
+line ::= IF OPEN_PARENTHESIS value:val CLOSE_PARENTHESIS DOT THEN OPEN_PARENTHESIS block:block_name_a CLOSE_PARENTHESIS DOT ELSE OPEN_PARENTHESIS block:block_name_b CLOSE_PARENTHESIS SEMICOLON{:
+    Statements s = new Statements();
+    String handle = val.getHandle();
+    if (handle == null) typeError("Expression does not produce a value", val);
+    
+    Statement newStatement = new ConditionalGotoStatement(handle, block_name_a, block_name_b);
+    s.appendStatements(val);
+    s.statements.add(newStatement);
+    RESULT = s;
+:};
+
+
+line ::= WHILE OPEN_PARENTHESIS value:val CLOSE_PARENTHESIS DOT THEN OPEN_PARENTHESIS block:block_name CLOSE_PARENTHESIS SEMICOLON {:
+    String handle = val.getHandle();
+    if (handle == null) typeError("Expression does not produce a value", val);
+    
+    String newBlock = generateTempBlockName();
+    Statements s = new Statements();
+
+    s.appendStatements(val);
+    Statement newStatement = new ConditionalGotoStatement(handle, block_name);
+    s.statements.add(newStatement);
+    parser.blocksTable.put(newBlock, s);
+
+    parser.blocksTable.get(block_name).statements.add(new GotoStatement(newBlock));
+
+    RESULT = s;
+:};
+
+line ::= NAME:name PLUS_ASSIGNMENT value:val SEMICOLON {:
+    String handle = val.getHandle();
+    if (handle == null) typeError("Expression does not produce a value", val);
+
+    Statements s = new Statements();
+    s.appendStatements(val);
+    VariableValueStatement namedVariable = new VariableValueStatement(name);
+    s.statements.add(namedVariable);
+    DualOperationValueStatement operation = new DualOperationValueStatement(namedVariable.handle, handle, DualOperationValueStatement.Operation.PLUS);
+    s.statements.add(operation);
+    AssignmentStatement assignment = new AssignmentStatement(name, operation.handle);
+    s.statements.add(assignment);
+
+    RESULT = s;
+:};
+
+line ::= NAME:name MINUS_ASSIGNMENT value:val SEMICOLON {:
+    String handle = val.getHandle();
+    if (handle == null) typeError("Expression does not produce a value", val);
+
+    Statements s = new Statements();
+    s.appendStatements(val);
+    VariableValueStatement namedVariable = new VariableValueStatement(name);
+    s.statements.add(namedVariable);
+    DualOperationValueStatement operation = new DualOperationValueStatement(namedVariable.handle, handle, DualOperationValueStatement.Operation.MINUS);
+    s.statements.add(operation);
+    AssignmentStatement assignment = new AssignmentStatement(name, operation.handle);
+    s.statements.add(assignment);
+
+    RESULT = s;
+:};
+
+line ::= NAME:name MUL_ASSIGNMENT value:val SEMICOLON {:
+    String handle = val.getHandle();
+    if (handle == null) typeError("Expression does not produce a value", val);
+
+    Statements s = new Statements();
+    s.appendStatements(val);
+    VariableValueStatement namedVariable = new VariableValueStatement(name);
+    s.statements.add(namedVariable);
+    DualOperationValueStatement operation = new DualOperationValueStatement(namedVariable.handle, handle, DualOperationValueStatement.Operation.MUL);
+    s.statements.add(operation);
+    AssignmentStatement assignment = new AssignmentStatement(name, operation.handle);
+    s.statements.add(assignment);
+
+    RESULT = s;
+:};
+
+line ::= NAME:name DIV_ASSIGNMENT value:val SEMICOLON {:
+    String handle = val.getHandle();
+    if (handle == null) typeError("Expression does not produce a value", val);
+
+    Statements s = new Statements();
+    s.appendStatements(val);
+    VariableValueStatement namedVariable = new VariableValueStatement(name);
+    s.statements.add(namedVariable);
+    DualOperationValueStatement operation = new DualOperationValueStatement(namedVariable.handle, handle, DualOperationValueStatement.Operation.DIV);
+    s.statements.add(operation);
+    AssignmentStatement assignment = new AssignmentStatement(name, operation.handle);
+    s.statements.add(assignment);
+
+    RESULT = s;
+:};

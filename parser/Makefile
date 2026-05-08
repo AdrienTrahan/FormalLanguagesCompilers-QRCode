@@ -7,6 +7,9 @@ scanner:
 	
 parser:
 	java java_cup.Main parser.cup
+
+compile:
+	javac *.java
 	
 clean:
 	rm -fr parser.java Yylex.java sym.java
@@ -17,16 +20,15 @@ clean:
 init:
 	mkdir source build
 	
-run:
-	java Main example.txt
+encode:
+	java Encode example.txt
 
-test:
+encode_test:
 	rm -fr parser.java Yylex.java sym.java
 	rm -vfr *.class
 	rm -vfr *.*~
 	jflex scanner.jflex
 	java java_cup.Main parser.cup
 	javac *.java
-	java Main example.txt
-
+	java Encode example.txt
 new: default run

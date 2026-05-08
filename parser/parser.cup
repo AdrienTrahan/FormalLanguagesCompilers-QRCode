@@ -32,6 +32,8 @@ parser code {:
     public ArrayList<Object[]> getGeneratedByteCode(){
         ArrayList<Object[]> allStatements = new ArrayList<>();
         ParserHelper helper = getParserHelper();
+        GotoStatement goToRootStatement = new GotoStatement("root");
+        allStatements.add(goToRootStatement.toList(helper));
         for (Map.Entry<String, Statements> entry : blocksTable.entrySet()) {
             BlockDeclarationStatement blockDeclarationStatement = new BlockDeclarationStatement(entry.getKey());
             allStatements.add(blockDeclarationStatement.toList(helper));

@@ -36,6 +36,14 @@ MINUS_ASSIGNMENT = "-="
 MUL_ASSIGNMENT = "*="
 DIV_ASSIGNMENT = "/="
 
+CLEAR_MEMORY = "clearMemory"
+CLEAR_SCREEN = "clearScreen"
+BUTTON = "button"
+DISPLAY = "display"
+GET_MEMORY_AT = "getMemoryAt"
+GET_MEMORY_SIZE = "getMemorySize"
+ADD_TO_MEMORY = "addToMemory"
+
 IF = "if"
 THEN = "then"
 ELSE = "else"
@@ -77,6 +85,14 @@ NOT = "!"
 {GREATER_EQUAL}       { return new Symbol(sym.GREATER_EQUAL, yyline, yycolumn); }
 {LESS_EQUAL}          { return new Symbol(sym.LESS_EQUAL, yyline, yycolumn); }
 
+
+{CLEAR_MEMORY}        { return new Symbol(sym.CLEAR_MEMORY, yyline, yycolumn); }
+{CLEAR_SCREEN}        { return new Symbol(sym.CLEAR_SCREEN, yyline, yycolumn); }
+{BUTTON}              { return new Symbol(sym.BUTTON, yyline, yycolumn); }
+{DISPLAY}             { return new Symbol(sym.DISPLAY, yyline, yycolumn); }
+{GET_MEMORY_AT}       { return new Symbol(sym.GET_MEMORY_AT, yyline, yycolumn); }
+{GET_MEMORY_SIZE}     { return new Symbol(sym.GET_MEMORY_SIZE, yyline, yycolumn); }
+{ADD_TO_MEMORY}       { return new Symbol(sym.ADD_TO_MEMORY, yyline, yycolumn); }
 
 {ASSIGNMENT}          { return new Symbol(sym.ASSIGNMENT, yyline, yycolumn); }
 {PLUS_ASSIGNMENT}     { return new Symbol(sym.PLUS_ASSIGNMENT, yyline, yycolumn); }

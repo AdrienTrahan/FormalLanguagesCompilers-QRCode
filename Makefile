@@ -11,6 +11,7 @@ parser:
 clean:
 	rm -fr parser.java Yylex.java sym.java
 	rm -vfr *.class
+	rm -vfr parsing/*.class
 	rm -vfr *.*~
 	
 init:

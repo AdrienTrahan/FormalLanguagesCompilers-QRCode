@@ -359,18 +359,23 @@ value ::= GET_MEMORY_AT OPEN_PARENTHESIS value:val CLOSE_PARENTHESIS {:
 
     Statements s = new Statements();
     s.appendStatements(val);
-    s.statements.add(new GetMemoryAtStatement(handle));
+
+    GetMemoryAtStatement statement = new GetMemoryAtStatement(handle);
+    statement.generateHandle(generateTempVariableName());
+    s.statements.add(statement);
+
     RESULT = s;
 :};
 
 value ::= GET_MEMORY_SIZE OPEN_PARENTHESIS CLOSE_PARENTHESIS {:
     Statements s = new Statements();
-    s.statements.add(new GetMemorySizeStatement());
+    GetMemorySizeStatement statement = new GetMemorySizeStatement();
+    statement.generateHandle(generateTempVariableName());
+    s.statements.add(statement);
     RESULT = s;
 :};
 
 line ::= NAME:name ASSIGNMENT value:val SEMICOLON {:
-
     Statements s = new Statements();
     String handle = val.getHandle();
     if (handle == null) typeError("Expression does not produce a value", val);
@@ -466,8 +471,10 @@ line ::= WHILE OPEN_PARENTHESIS value:val CLOSE_PARENTHESIS DOT THEN OPEN_PARENT
     parser.blocksTable.put(newBlock, s);
 
     parser.blocksTable.get(block_name).statements.add(new GotoStatement(newBlock));
-
-    RESULT = s;
+    
+    Statements s2 = new Statements();
+    s2.statements.add(new GotoStatement(newBlock));
+    RESULT = s2;
 :};
 
 line ::= NAME:name PLUS_ASSIGNMENT value:val SEMICOLON {:

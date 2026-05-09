@@ -29,4 +29,30 @@ public class ConstantValueStatement extends ValueStatement {
     public Object[] toList(ParserHelper helper) {
         return new Object[]{ Statement.StatementType.ConstantValueStatement.getCode(), helper.getOptimizedHandle(this.handle), this.getValueType().getCode(), this.value.toString()};
     }
+
+    public static ConstantValueStatement loadFromInstruction(Object[] instruction) {
+        String handle = String.valueOf(instruction[1]);
+        int valueTypeCode = Integer.parseInt(instruction[2].toString());
+        String valueStr = String.valueOf(instruction[3]);
+
+        ValueType valueType = ValueType.values()[valueTypeCode];
+        Object value;
+        switch (valueType) {
+            case Scalar:
+                value = Float.parseFloat(valueStr);
+                break;
+            case Bool:
+                value = Boolean.parseBoolean(valueStr);
+                break;
+            default:
+                value = valueStr;
+        }
+
+        ConstantValueStatement stmt = new ConstantValueStatement(value);
+        stmt.generateHandle(handle);
+        return stmt;
+    }
+    public void execute(RunningContext context){
+        context.variables.put(this.handle, this.value);
+    }
 }

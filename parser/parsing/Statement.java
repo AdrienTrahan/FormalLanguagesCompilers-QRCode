@@ -30,6 +30,7 @@ public abstract class Statement {
             return String.valueOf(code);
         }
     }
+    public abstract void execute(RunningContext context);
     public abstract Object[] toList(ParserHelper helper);
     static Statement loadFromInstruction(Object[] instruction) {
         if (instruction[0] == null) return null;

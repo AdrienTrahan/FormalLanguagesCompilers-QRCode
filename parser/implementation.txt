@@ -20,11 +20,6 @@
 //     RESULT = toNumber(a) / toNumber(b);
 // :};
 
-// value ::= NOT value:a {:
-//     if (!(a instanceof Boolean)) typeError("Cannot apply 'not' to a non-boolean value", a);
-//     RESULT = !((Boolean) a);
-// :};
-
 // value ::= OPEN_PARENTHESIS value CLOSE_PARENTHESIS;
 
 // value ::= value:a EQUALITY value:b {:

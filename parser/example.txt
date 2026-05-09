@@ -3,15 +3,16 @@ function root({
     display("Zoo passport");
     counter = 0;
     while (counter <= getMemorySize()).then({
-        counter += 1;
         display(getMemoryAt(counter));
+        counter += 1;
     });
 
     button("New animal").then({
         animalHasPatterns();
     });
-    button("clear passport").then({
+    button("Erase passport").then({
         clearMemory();
+        root();
     });
 });
 
@@ -34,8 +35,9 @@ function animalHasTrunk({
     clearScreen();
     display("Does the animal have a trunk?");
     button("Yes").then({
-        selectedAnimal = "elephant";
+        selectedAnimal = "🐘 Elephant 🐘";
         addAnimal();
+        root();
     });
     button("No").then({
         animalDoesNotExist();
@@ -47,14 +49,16 @@ function animalHasTrunk({
 
 function animalHasLongNeck({
     clearScreen();
-    display("Does the animal have wings?");
+    display("Does the animal have a long neck?");
     button("Yes").then({
-        selectedAnimal = "giraffe";
+        selectedAnimal = "🦒 Giraffe 🦒";
         addAnimal();
+        root();
     });
     button("No").then({
-        selectedAnimal = "zebra";
+        selectedAnimal = "🦓 Zebra 🦓";
         addAnimal();
+        root();
     });
     button("Show Passport").then({
         root();
@@ -65,7 +69,7 @@ function animalHasLongNeck({
 function addAnimal({
     counter = 0;
     alreadyExists = false;
-    while (counter <= getMemorySize()).then({
+    while (counter < getMemorySize()).then({
         if (getMemoryAt(counter) == selectedAnimal).then({
             alreadyExists = true;
         });
@@ -78,8 +82,9 @@ function addAnimal({
 });
 
 function animalDoesNotExist({
+    clearScreen();
     display("The animal does not exist. Keep looking.");
-    button("menu").then({
+    button("Menu").then({
         root();
     });
 });

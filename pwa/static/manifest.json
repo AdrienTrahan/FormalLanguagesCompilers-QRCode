@@ -5,7 +5,7 @@
   "categories": ["example", "second-example"],
   "theme_color": "#1e88e5",
   "background_color": "#3E82F7",
-  "display": "minimal-ui",
+  "display": "standalone",
   "start_url": "/",
   "icons": [
     { "src": "/icon.png", "sizes": "512x512" },

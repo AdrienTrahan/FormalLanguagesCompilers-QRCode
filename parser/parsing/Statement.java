@@ -31,4 +31,42 @@ public abstract class Statement {
         }
     }
     public abstract Object[] toList(ParserHelper helper);
+    static Statement loadFromInstruction(Object[] instruction) {
+        if (instruction[0] == null) return null;
+        StatementType statementType = StatementType.values()[Integer.parseInt(instruction[0].toString())];
+        switch (statementType) {
+            case BlockStart:
+                return BlockDeclarationStatement.loadFromInstruction(instruction);
+            case GotoStatement:
+                return GotoStatement.loadFromInstruction(instruction);
+            case ConditionalGotoStatement:
+                return ConditionalGotoStatement.loadFromInstruction(instruction);
+            case ConstantValueStatement:
+                return ConstantValueStatement.loadFromInstruction(instruction);
+            case VariableValueStatement:
+                return VariableValueStatement.loadFromInstruction(instruction);
+            case DualOperationValueStatement:
+                return DualOperationValueStatement.loadFromInstruction(instruction);
+            case NotOperationValueStatement:
+                return NotOperationValueStatement.loadFromInstruction(instruction);
+            case AssignmentStatement:
+                return AssignmentStatement.loadFromInstruction(instruction);
+            case ClearMemoryStatement:
+                return ClearMemoryStatement.loadFromInstruction(instruction);
+            case ClearScreenStatement:
+                return ClearScreenStatement.loadFromInstruction(instruction);
+            case DisplayStatement:
+                return DisplayStatement.loadFromInstruction(instruction);
+            case ButtonStatement:
+                return ButtonStatement.loadFromInstruction(instruction);
+            case AddToMemoryStatement:
+                return AddToMemoryStatement.loadFromInstruction(instruction);
+            case GetMemoryAtStatement:
+                return GetMemoryAtStatement.loadFromInstruction(instruction);
+            case GetMemorySizeStatement:
+                return GetMemorySizeStatement.loadFromInstruction(instruction);
+        }
+        return null;
+        
+    }
 }

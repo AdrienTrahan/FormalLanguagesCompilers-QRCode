@@ -1,8 +1,12 @@
-<svelte:head>
-  <title>Home</title>
-  <meta name="description" content="Home Page" />
-</svelte:head>
+<script lang="ts">
+    import { JavaRuntime } from '$lib/runtime'
+    import { onMount } from 'svelte'
 
-<section>
-  <span>Home Page</span>
-</section>
+    onMount(async () => {
+        JavaRuntime.getInstance().then(async (runtime) => {
+            const bytecode = await runtime.compile("function root({});");
+            await runtime.run(bytecode);
+            console.log(bytecode);
+        })
+    })
+</script>

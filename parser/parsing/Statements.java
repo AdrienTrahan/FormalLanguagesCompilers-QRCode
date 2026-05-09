@@ -16,4 +16,13 @@ public class Statements {
         if (lastStatement instanceof ValueStatement) return ((ValueStatement) lastStatement).handle;
         return null;
     }
+    public static Statements loadFromInstructions(ArrayList<Object[]> instructions){
+        Statements statements = new Statements();
+        for (Object[] instruction : instructions) {
+            Statement statement = Statement.loadFromInstruction(instruction);
+            statements.statements.add(statement);
+        }
+        return statements;
+
+    }
 }

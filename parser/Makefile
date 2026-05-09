@@ -32,3 +32,17 @@ encode_test:
 	javac *.java
 	java Encode example.txt
 new: default run
+
+jar:
+	find . -name "*.class" > classes.txt
+	echo "Main-Class: Compiler" > manifest1.txt
+	echo "Main-Class: Runner" > manifest2.txt
+	jar cfm Compiler.jar manifest1.txt @classes.txt
+	jar cfm Runner.jar manifest2.txt @classes.txt
+	rm manifest1.txt manifest2.txt classes.txt
+	mv -f Compiler.jar ../pwa/static/runtime/Compiler.jar
+	mv -f Runner.jar ../pwa/static/runtime/Runner.jar
+
+build: scanner parser compile jar clean
+
+

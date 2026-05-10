@@ -1,9 +1,10 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
-    import { Html5Qrcode } from 'html5-qrcode';
+    import { BrowserMultiFormatReader } from '@zxing/browser';
     import Playground from '$lib/Playground.svelte';
 
-    let scanner: Html5Qrcode | null = null;
+    let codeReader: BrowserMultiFormatReader | null = null;
+    let controls: { stop: () => void } | null = null;
     let scanning = false;
     let error = '';
     let showPlayground = false;
@@ -22,30 +23,27 @@
 
     async function startScanner() {
         error = '';
-        if (scanner) {
-            try {
-                await scanner.stop();
-            } catch {}
-            scanner = null;
+        if (controls) {
+            controls.stop();
+            controls = null;
         }
         await new Promise(r => setTimeout(r, 100));
         try {
-            scanner = new Html5Qrcode('reader');
-            await scanner.start(
-                { facingMode: 'environment' },
-                {
-                    fps: 10,
-                },
-                (decodedText) => {
-                    try {
-                        bytecode = JSON.parse(decodedText);
-                        showPlayground = true;
-                        stopScanner();
-                    } catch {
-                        error = 'Invalid QR code format';
+            codeReader = new BrowserMultiFormatReader();
+            controls = await codeReader.decodeFromVideoDevice(
+                undefined,
+                'reader',
+                (result) => {
+                    if (result) {
+                        try {
+                            bytecode = JSON.parse(result.getText());
+                            showPlayground = true;
+                            stopScanner();
+                        } catch {
+                            error = 'Invalid QR code format';
+                        }
                     }
-                },
-                () => {},
+                }
             );
             scanning = true;
         } catch (err) {
@@ -54,14 +52,11 @@
         }
     }
 
-    async function stopScanner() {
-        if (scanner && scanning) {
-            try {
-                await scanner.stop();
-                scanning = false;
-            } catch {
-                // ignore
-            }
+    function stopScanner() {
+        if (controls) {
+            controls.stop();
+            controls = null;
+            scanning = false;
         }
     }
 
@@ -77,10 +72,10 @@
         <Playground {bytecode} {runtimePromise} on:close={closePlayground} />
     {:else}
         <div class="absolute inset-0">
-            <div
+            <video
                 id="reader"
-                class="w-full h-full [&_video]:w-full [&_video]:h-full [&_video]:object-contain"
-            ></div>
+                class="w-full h-full object-contain"
+            ><track kind="captions" /></video>
             {#if error}
                 <div class="absolute inset-0 flex items-center justify-center">
                     <div class="bg-red-500 text-white px-4 py-2 rounded-md">

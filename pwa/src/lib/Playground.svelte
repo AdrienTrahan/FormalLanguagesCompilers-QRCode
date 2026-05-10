@@ -79,7 +79,7 @@
         </div>
     {:else}
         <div class="flex-1 min-h-0 flex flex-col">
-            <div class="flex-1 p-4 flex flex-col gap-2">
+            <div class="flex-1 p-4 flex flex-col gap-2 min-h-0">
                 {#each $lines as line}
                     <p class="text-xl">{line}</p>
                 {/each}

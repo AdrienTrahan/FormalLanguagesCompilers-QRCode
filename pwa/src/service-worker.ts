@@ -9,15 +9,36 @@ import { build, files, version } from '$service-worker'
 // Initializations:
 const worker = self as unknown as ServiceWorkerGlobalScope
 const FILES = `cache${version}`
+const BASE = '/FormalLanguagesCompilers-QRCode'
 const to_cache = build.concat(files)
 const staticAssets = new Set(to_cache)
+const extraAssets = [
+    `${BASE}/runtime/Compiler.jar`,
+    `${BASE}/runtime/Runner.jar`,
+    `${BASE}/cheerpj/loader.js`,
+    `${BASE}/cheerpj/cheerpOS.js`,
+    `${BASE}/cheerpj/c.js`,
+    `${BASE}/cheerpj/c.html`,
+    `${BASE}/cheerpj/cheerpj.css`,
+    `${BASE}/cheerpj/cj3.js`,
+    `${BASE}/cheerpj/cj3n17.wasm`,
+    `${BASE}/cheerpj/cj3.wasm`,
+    `${BASE}/cheerpj/17/lib/modules`,
+    `${BASE}/cheerpj/17/jre/lib/cheerpj-jsobject.jar`,
+    `${BASE}/cheerpj/17/jre/lib/cheerpj-handlers.jar`,
+    `${BASE}/cheerpj/17/jre/lib/cheerpj-awt.jar`,
+    `${BASE}/cheerpj/17/conf/security/java.security`,
+    `${BASE}/cheerpj/etc/users`,
+].filter(Boolean)
+const allToCache = [...to_cache, ...extraAssets]
+const extraStaticAssets = new Set(extraAssets)
 
 // Install Event:
 worker.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(FILES)
-      .then((cache) => cache.addAll(to_cache))
+      .then((cache) => cache.addAll(allToCache))
       .then(() => {
         worker.skipWaiting()
       })
@@ -56,7 +77,7 @@ worker.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
   const isHttp = url.protocol.startsWith('http')
   const isDevServerRequest = url.hostname === self.location.hostname && url.port !== self.location.port
-  const isStaticAsset = url.host === self.location.host && staticAssets.has(url.pathname)
+  const isStaticAsset = url.host === self.location.host && (staticAssets.has(url.pathname) || extraStaticAssets.has(url.pathname))
   const skipBecauseUncached = event.request.cache === 'only-if-cached' && !isStaticAsset
   if (isHttp && !isDevServerRequest && !skipBecauseUncached) {
     event.respondWith(

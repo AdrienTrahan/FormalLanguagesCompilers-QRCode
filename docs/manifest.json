@@ -9,7 +9,7 @@
     "start_url": "/FormalLanguagesCompilers-QRCode/generate",
     "icons": [
         {
-            "src": "/icon.png",
+            "src": "/FormalLanguagesCompilers-QRCode/icon.png",
             "sizes": "512x512"
         },
         {

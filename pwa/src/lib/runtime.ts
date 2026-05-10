@@ -1,4 +1,6 @@
-import type { Screen } from "./screen";
+import { get } from 'svelte/store';
+import type { Screen } from './screen';
+import { basePath } from './path';
 
 export class JavaRuntime {
     private resolveCompiler: ((value: string) => void) | undefined;
@@ -41,15 +43,6 @@ export class JavaRuntime {
         });
         return runtime;
     }
-    // async nativeSetApplication(lib: any, myApplication: any) {
-    //     this.runningContext = myApplication;
-    //     console.log("Java application instance set on JavaScript side.");
-
-    //     setTimeout(() => {
-    //         this.runningContext.queueBlockName("asd");
-    //     }, 1000);
-    //     return new Promise(() => {});
-    // }
 
     async compile(code: string): Promise<string> {
         const task = this.compileQueue.then(() => this.runCompile(code));
@@ -62,7 +55,7 @@ export class JavaRuntime {
             this.resolveCompiler = resolve;
             try {
                 const exitCode = await (window as any).cheerpjRunJar(
-                    "/app/runtime/Compiler.jar",
+                    `/app${get(basePath)}/runtime/Compiler.jar`,
                     [code],
                 );
 
@@ -86,7 +79,7 @@ export class JavaRuntime {
         this.screen = screen;
         return await new Promise<void>(async (resolve, reject) => {
             const exitCode = await (window as any).cheerpjRunJar(
-                "/app/runtime/Runner.jar",
+                `/app${get(basePath)}/runtime/Runner.jar`,
                 [bytecode],
             );
 
@@ -113,7 +106,7 @@ export class JavaRuntime {
     }
 
     async clearMemory() {
-        localStorage.removeItem("memory");
+        localStorage.removeItem('memory');
     }
 
     async clearScreen() {
@@ -137,29 +130,29 @@ export class JavaRuntime {
     async getMemoryAt(lib: any, index: number) {
         index = await toJsPrimitive(index);
 
-        if (localStorage.getItem("memory") == null)
-            localStorage.setItem("memory", JSON.stringify([]));
-        const memory = JSON.parse(localStorage.getItem("memory")!);
+        if (localStorage.getItem('memory') == null)
+            localStorage.setItem('memory', JSON.stringify([]));
+        const memory = JSON.parse(localStorage.getItem('memory')!);
         return memory[index];
     }
 
     async getMemorySize() {
-        if (localStorage.getItem("memory") == null)
-            localStorage.setItem("memory", JSON.stringify([]));
-        const memory = JSON.parse(localStorage.getItem("memory")!);
+        if (localStorage.getItem('memory') == null)
+            localStorage.setItem('memory', JSON.stringify([]));
+        const memory = JSON.parse(localStorage.getItem('memory')!);
         return memory.length;
     }
 
     async addToMemory(lib: any, value: any) {
-        console.log("here");
+        console.log('here');
 
         value = await toJsPrimitive(value);
-        if (localStorage.getItem("memory") == null)
-            localStorage.setItem("memory", JSON.stringify([]));
+        if (localStorage.getItem('memory') == null)
+            localStorage.setItem('memory', JSON.stringify([]));
 
-        const memory = JSON.parse(localStorage.getItem("memory")!);
+        const memory = JSON.parse(localStorage.getItem('memory')!);
         memory.push(value);
-        localStorage.setItem("memory", JSON.stringify(memory));
+        localStorage.setItem('memory', JSON.stringify(memory));
     }
 
     endRunningLoop() {
@@ -171,13 +164,13 @@ export class JavaRuntime {
 async function toJsPrimitive(value: any): Promise<any> {
     if (value == null) return null;
     const t = typeof value;
-    if (t !== "object") return value;
-    if (typeof value.booleanValue === "function")
+    if (t !== 'object') return value;
+    if (typeof value.booleanValue === 'function')
         return value.booleanValue() === true;
-    if (typeof value.doubleValue === "function") return value.doubleValue();
-    if (typeof value.floatValue === "function") return value.floatValue();
-    if (typeof value.intValue === "function") return value.intValue();
-    if (typeof value.longValue === "function") return Number(value.longValue());
-    if (typeof value.toString === "function") return value.toString();
+    if (typeof value.doubleValue === 'function') return value.doubleValue();
+    if (typeof value.floatValue === 'function') return value.floatValue();
+    if (typeof value.intValue === 'function') return value.intValue();
+    if (typeof value.longValue === 'function') return Number(value.longValue());
+    if (typeof value.toString === 'function') return value.toString();
     return value;
 }

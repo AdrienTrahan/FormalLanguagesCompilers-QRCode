@@ -1,6 +1,7 @@
 <script lang="ts">
     import { cn } from '@sglara/cn';
     import { page } from '$app/stores';
+    import { base } from '$app/paths';
     import '../app.css';
     export let data;
     const { runtime } = data;
@@ -18,25 +19,25 @@
 
     <div class="flex select-none font-bold justify-center items-center h-14">
         <a
-            href="/generate/"
+            href="{base}/generate/"
             class={cn(
                 'flex-1 cursor-pointer h-full flex items-center justify-center border-t-2',
-                $page.url.pathname === '/generate/'
+                $page.url.pathname === `${base}/generate/`
                     ? 'text-blue-600'
                     : 'text-zinc-500',
-                $page.url.pathname === '/generate/'
+                $page.url.pathname === `${base}/generate/`
                     ? 'border-t-blue-600'
                     : 'border-t-zinc-100',
             )}>Generate</a
         >
         <a
-            href="/scan/"
+            href="{base}/scan/"
             class={cn(
                 'flex-1 cursor-pointer h-full flex items-center justify-center border-t-2 ',
-                $page.url.pathname === '/scan/'
+                $page.url.pathname === `${base}/scan/`
                     ? 'text-blue-600'
                     : 'text-zinc-500',
-                $page.url.pathname === '/scan/'
+                $page.url.pathname === `${base}/scan/`
                     ? 'border-t-blue-600'
                     : 'border-t-zinc-100',
             )}>Scan</a

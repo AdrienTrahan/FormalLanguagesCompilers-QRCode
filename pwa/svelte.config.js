@@ -8,8 +8,11 @@ const config = {
         adapter: adapter({
             assets: '../docs',
             pages: '../docs',
-            fallback: 'index.html'
+            fallback: 'index.html',
         }),
+        paths: {
+            base: '/FormalLanguagesCompilers-QRCode',
+        },
     },
 };
 

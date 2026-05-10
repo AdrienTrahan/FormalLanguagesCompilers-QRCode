@@ -1,6 +1,5 @@
-import { get } from 'svelte/store';
 import type { Screen } from './screen';
-import { basePath } from './path';
+import { base } from '$app/paths';
 
 export class JavaRuntime {
     private resolveCompiler: ((value: string) => void) | undefined;
@@ -21,6 +20,7 @@ export class JavaRuntime {
         const runtime = new JavaRuntime();
         await (window as any).cheerpjInit({
             version: 17,
+            baseURL: window.location.origin + base,
             natives: {
                 Java_Compiler_sendOutput: runtime.sendOutput.bind(runtime),
                 Java_parsing_RunningContext_clearMemory:
@@ -55,7 +55,7 @@ export class JavaRuntime {
             this.resolveCompiler = resolve;
             try {
                 const exitCode = await (window as any).cheerpjRunJar(
-                    `/app${get(basePath)}/runtime/Compiler.jar`,
+                    `/app${base}/runtime/Compiler.jar`,
                     [code],
                 );
 
@@ -79,7 +79,7 @@ export class JavaRuntime {
         this.screen = screen;
         return await new Promise<void>(async (resolve, reject) => {
             const exitCode = await (window as any).cheerpjRunJar(
-                `/app${get(basePath)}/runtime/Runner.jar`,
+                `/app${base}/runtime/Runner.jar`,
                 [bytecode],
             );
 

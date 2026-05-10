@@ -22,6 +22,13 @@
 
     async function startScanner() {
         error = '';
+        if (scanner) {
+            try {
+                await scanner.stop();
+            } catch {}
+            scanner = null;
+        }
+        await new Promise(r => setTimeout(r, 100));
         try {
             scanner = new Html5Qrcode('reader');
             await scanner.start(

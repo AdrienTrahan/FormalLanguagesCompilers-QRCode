@@ -12,7 +12,7 @@ import java_cup.runtime.*;
 nl = \n|\r|\n\r
 
 NAME = [a-zA-Z_][a-zA-Z0-9_]*
-SCALAR_VALUE = [+-]?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))([eE][+-]?[0-9]+)?
+SCALAR_VALUE = (([0-9]+(\.[0-9]*)?)|(\.[0-9]+))([eE][+-]?[0-9]+)?
 STRING_VALUE = \"([^\\\"\n\r]|\\.)*\"
 
 PLUS = "+"

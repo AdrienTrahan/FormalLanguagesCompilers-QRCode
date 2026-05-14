@@ -1,36 +1,46 @@
-default: scanner parser
+JAVA_VERSION=17
+JAVA_HOME ?= $(shell /usr/libexec/java_home -v 17 2>/dev/null)
 
-	javac *.java
+JAVAC = $(JAVA_HOME)/bin/javac
+JAVA = $(JAVA_HOME)/bin/java
+
+# Verify JDK version
+check-java:
+	@$(JAVAC) -version 2>&1 | grep "\"\?17\." >/dev/null || \
+	(echo "Error: JDK 17 is required"; exit 1)
+
+default: check-java scanner parser compile
 
 scanner:
 	jflex scanner.jflex
-	
+
 parser:
 	java java_cup.Main parser.cup
 
 compile:
-	javac *.java
-	
+	$(JAVAC) --release $(JAVA_VERSION) *.java
+
 clean:
 	rm -fr parser.java Yylex.java sym.java
 	rm -vfr *.class
 	rm -vfr parsing/*.class
 	rm -vfr *.*~
-	
+
 init:
 	mkdir source build
-	
-encode:
-	java Encode example.txt
 
-encode_test:
+encode:
+	$(JAVA) Encode example.txt
+
+encode_test: check-java
 	rm -fr parser.java Yylex.java sym.java
 	rm -vfr *.class
 	rm -vfr *.*~
 	jflex scanner.jflex
 	java java_cup.Main parser.cup
-	javac *.java
-	java Encode example.txt
+	$(JAVAC) --release $(JAVA_VERSION) *.java
+	$(JAVA) Encode example.txt
+
 new: default run
 
 jar:
@@ -43,6 +53,4 @@ jar:
 	mv -f Compiler.jar ../pwa/static/runtime/Compiler.jar
 	mv -f Runner.jar ../pwa/static/runtime/Runner.jar
 
-build: scanner parser compile jar clean
-
-
+build: check-java scanner parser compile jar clean

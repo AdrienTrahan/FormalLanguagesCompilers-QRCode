@@ -1,0 +1,8 @@
+function root({
+    counter = 0.0;
+    while (counter < 25).then({
+        display(counter);
+        counter += 1;
+    });
+    display("the end");
+});

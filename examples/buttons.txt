@@ -1,0 +1,16 @@
+function root({
+    clearScreen();
+    display("BUTTONS");
+    number = 0.0;
+    button("Clear Screen").then({
+        root();
+    });
+    addButton();
+});
+
+function addButton({
+    number += 1.0;
+    button(number).then({
+        addButton();
+    });
+});

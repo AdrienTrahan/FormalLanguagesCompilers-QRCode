@@ -17,6 +17,8 @@ public class Runner {
             new Thread(() -> {
                 setRunningContext(context);
             }).start();
+            
+            context.variables.clear();
             context.execute();
         } catch (Exception e) {
             e.printStackTrace();

@@ -37,7 +37,6 @@ public class RunningContext {
     }
 
     public void execute() {
-        this.variables.clear();
         isRunning = true;
         while (this.topLevelStatements.statements.size() > 0) {
             this.queuedBlockNames.clear();

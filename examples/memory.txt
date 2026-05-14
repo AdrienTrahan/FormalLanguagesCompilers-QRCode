@@ -1,0 +1,29 @@
+function root({
+    counter = 0.0;
+    page();
+});
+
+function page({
+
+    clearScreen();
+    display("Memory size: " + getMemorySize() + " | Counter: " + counter);
+    showMemory();
+
+    button("Add element " + counter + " to memory").then({
+        addToMemory(counter);
+        counter += 1;
+        page();
+    });
+
+    button("Clear Memory").then({
+        clearMemory();
+        page();
+    });
+});
+function showMemory({
+    i = 0;
+    while (i < getMemorySize()).then({
+        display(getMemoryAt(i));
+        i += 1;
+    });
+});
